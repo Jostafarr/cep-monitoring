@@ -31,6 +31,8 @@ import org.apache.flink.streaming.api.functions.IngestionTimeExtractor;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.util.Collector;
 import org.stsffap.cep.monitoring.sources.MonitoringEventSource;
+import org.stsffap.cep.monitoring.transformations.TemperatureAlertTransformation;
+import org.stsffap.cep.monitoring.transformations.TemperatureWarningTransformation;
 import org.stsffap.cep.monitoring.events.MonitoringEvent;
 import org.stsffap.cep.monitoring.events.TemperatureEvent;
 import org.stsffap.cep.monitoring.events.TemperatureAlert;
@@ -80,68 +82,14 @@ public class CEPMonitoring {
                         TEMP_MEAN))
                 .assignTimestampsAndWatermarks(new IngestionTimeExtractor<>());
 
-        // Warning pattern: Two consecutive temperature events whose temperature is higher than the given threshold
-        // appearing within a time interval of 10 seconds
-        Pattern<MonitoringEvent, ?> warningPattern = Pattern.<MonitoringEvent>begin("first")
-                .subtype(TemperatureEvent.class)
-                .where(new IterativeCondition<TemperatureEvent>() {
-                    private static final long serialVersionUID = -6301755149429716724L;
+    
 
-                    @Override
-                    public boolean filter(TemperatureEvent value, Context<TemperatureEvent> ctx) throws Exception {
-                         return value.getTemperature() >= TEMPERATURE_THRESHOLD;
-                    }
-                })
-                .next("second")
-                .subtype(TemperatureEvent.class)
-                .where(new IterativeCondition<TemperatureEvent>() {
-                    private static final long serialVersionUID = 2392863109523984059L;
+        DataStream<TemperatureWarning> warnings = TemperatureWarningTransformation.transform(inputEventStream, TEMPERATURE_THRESHOLD);
 
-                    @Override
-                    public boolean filter(TemperatureEvent value, Context<TemperatureEvent> ctx) throws Exception {
-                        return value.getTemperature() >= TEMPERATURE_THRESHOLD;
-                    }
-                })
-                .within(Time.seconds(10));
+      
 
-        // Create a pattern stream from our warning pattern
-        PatternStream<MonitoringEvent> tempPatternStream = CEP.pattern(
-                inputEventStream.keyBy("rackID"),
-                warningPattern);
 
-        // Generate temperature warnings for each matched warning pattern
-        DataStream<TemperatureWarning> warnings = tempPatternStream.select(
-            (Map<String, List<MonitoringEvent>> pattern) -> {
-                TemperatureEvent first = (TemperatureEvent) pattern.get("first").get(0);
-                TemperatureEvent second = (TemperatureEvent) pattern.get("second").get(0);
-
-                return new TemperatureWarning(first.getRackID(), (first.getTemperature() + second.getTemperature()) / 2);
-            }
-        );
-
-        // Alert pattern: Two consecutive temperature warnings appearing within a time interval of 20 seconds
-        Pattern<TemperatureWarning, ?> alertPattern = Pattern.<TemperatureWarning>begin("first")
-                .next("second")
-                .within(Time.seconds(20));
-
-        // Create a pattern stream from our alert pattern
-        PatternStream<TemperatureWarning> alertPatternStream = CEP.pattern(
-                warnings.keyBy("rackID"),
-                alertPattern);
-
-        // Generate a temperature alert only if the second temperature warning's average temperature is higher than
-        // first warning's temperature
-        DataStream<TemperatureAlert> alerts = alertPatternStream.flatSelect(
-            (Map<String, List<TemperatureWarning>> pattern, Collector<TemperatureAlert> out) -> {
-                TemperatureWarning first = pattern.get("first").get(0);
-                TemperatureWarning second = pattern.get("second").get(0);
-
-                if (first.getAverageTemperature() < second.getAverageTemperature()) {
-                    out.collect(new TemperatureAlert(first.getRackID()));
-                }
-            },
-            TypeInformation.of(TemperatureAlert.class));
-
+         DataStream<TemperatureAlert> alerts = TemperatureAlertTransformation.transform(warnings);   
         // Print the warning and alert events to stdout
         warnings.print();
         alerts.print();
