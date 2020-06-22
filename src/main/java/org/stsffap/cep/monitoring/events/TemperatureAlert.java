@@ -18,15 +18,19 @@
 
 package org.stsffap.cep.monitoring.events;
 
-public class TemperatureAlert {
+import org.stsffap.cep.monitoring.pyramid.Event;
+
+public class TemperatureAlert extends Event{
     private int rackID;
 
-    public TemperatureAlert(int rackID) {
+    public TemperatureAlert(int eventID, int rackID) {
+        super(eventID);
+        
         this.rackID = rackID;
     }
 
     public TemperatureAlert() {
-        this(-1);
+        this(-1,-1);
     }
 
     public void setRackID(int rackID) {

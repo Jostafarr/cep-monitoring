@@ -21,8 +21,9 @@ package org.stsffap.cep.monitoring.events;
 public class TemperatureEvent extends MonitoringEvent {
     private double temperature;
 
-    public TemperatureEvent(int rackID, double temperature) {
-        super(rackID);
+    public TemperatureEvent(int eventID, int rackID, double temperature) {
+        super(rackID, eventID);
+        
 
         this.temperature = temperature;
     }

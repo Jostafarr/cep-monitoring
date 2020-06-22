@@ -19,6 +19,7 @@
 package org.stsffap.cep.monitoring;
 
 import org.apache.flink.api.common.typeinfo.TypeInformation;
+import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.cep.CEP;
 import org.apache.flink.cep.PatternFlatSelectFunction;
 import org.apache.flink.cep.PatternStream;
@@ -26,6 +27,7 @@ import org.apache.flink.cep.pattern.Pattern;
 import org.apache.flink.cep.pattern.conditions.IterativeCondition;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
+import org.apache.flink.streaming.api.datastream.KeyedStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.IngestionTimeExtractor;
 import org.apache.flink.streaming.api.windowing.time.Time;
@@ -37,6 +39,8 @@ import org.stsffap.cep.monitoring.events.MonitoringEvent;
 import org.stsffap.cep.monitoring.events.TemperatureEvent;
 import org.stsffap.cep.monitoring.events.TemperatureAlert;
 import org.stsffap.cep.monitoring.events.TemperatureWarning;
+import org.stsffap.cep.monitoring.pyramid.Event;
+import org.stsffap.cep.monitoring.pyramid.Transformation;
 
 import java.util.List;
 import java.util.Map;
@@ -53,7 +57,7 @@ import java.util.Map;
  * analyzes the stream of generated temperature warnings.
  */
 public class CEPMonitoring {
-    private static final double TEMPERATURE_THRESHOLD = 100;
+    
 
     private static final int MAX_RACK_ID = 10;
     private static final long PAUSE = 100;
@@ -71,7 +75,7 @@ public class CEPMonitoring {
         env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
 
         // Input stream of monitoring events
-        DataStream<MonitoringEvent> inputEventStream = env
+        DataStream<Event> inputEventStream = env
                 .addSource(new MonitoringEventSource(
                         MAX_RACK_ID,
                         PAUSE,
@@ -82,14 +86,15 @@ public class CEPMonitoring {
                         TEMP_MEAN))
                 .assignTimestampsAndWatermarks(new IngestionTimeExtractor<>());
 
+                //inputEventStream.print();
+
+                
     
-
-        DataStream<TemperatureWarning> warnings = TemperatureWarningTransformation.transform(inputEventStream, TEMPERATURE_THRESHOLD);
-
-      
-
-
-         DataStream<TemperatureAlert> alerts = TemperatureAlertTransformation.transform(warnings);   
+                  
+        Transformation transform1 = new TemperatureWarningTransformation();
+        Transformation transform2 = new TemperatureAlertTransformation();
+        DataStream<Event> warnings =  transform1.transform(inputEventStream);
+         DataStream<Event> alerts = transform2.transform(warnings);   
         // Print the warning and alert events to stdout
         warnings.print();
         alerts.print();

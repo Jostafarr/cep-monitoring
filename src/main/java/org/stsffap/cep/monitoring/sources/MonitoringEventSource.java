@@ -23,11 +23,17 @@ import org.apache.flink.streaming.api.functions.source.RichParallelSourceFunctio
 import org.stsffap.cep.monitoring.events.MonitoringEvent;
 import org.stsffap.cep.monitoring.events.PowerEvent;
 import org.stsffap.cep.monitoring.events.TemperatureEvent;
+import org.stsffap.cep.monitoring.pyramid.Event;
 
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class MonitoringEventSource extends RichParallelSourceFunction<MonitoringEvent> {
+public class MonitoringEventSource extends RichParallelSourceFunction<Event> {
+
+    /**
+     *
+     */
+    private static final long serialVersionUID = 1L;
 
     private boolean running = true;
 
@@ -75,25 +81,25 @@ public class MonitoringEventSource extends RichParallelSourceFunction<Monitoring
         shard = (int)((double)maxRackId / numberTasks * (index + 1)) - offset;
     }
 
-    public void run(SourceContext<MonitoringEvent> sourceContext) throws Exception {
+    public void run(SourceContext<Event> sourceContext) throws Exception {
         while (running) {
-            MonitoringEvent monitoringEvent;
+            Event event;
 
             final ThreadLocalRandom random = ThreadLocalRandom.current();
 
             if (shard > 0) {
                 int rackId = random.nextInt(shard) + offset;
-
+                
                 if (random.nextDouble() >= temperatureRatio) {
                     double power = random.nextGaussian() * powerStd + powerMean;
-                    monitoringEvent = new PowerEvent(rackId, power);
+                    event = new PowerEvent(rackId ,rackId, power);
                 } else {
                     double temperature = random.nextGaussian() * temperatureStd + temperatureMean;
-                    monitoringEvent = new TemperatureEvent(rackId, temperature);
+                    event = new TemperatureEvent(rackId, rackId, temperature);
                 }
 
 
-                sourceContext.collect(monitoringEvent);
+                sourceContext.collect(event);
             }
 
             Thread.sleep(pause);

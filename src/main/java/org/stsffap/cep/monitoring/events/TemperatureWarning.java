@@ -18,20 +18,24 @@
 
 package org.stsffap.cep.monitoring.events;
 
-public class TemperatureWarning {
+import org.stsffap.cep.monitoring.pyramid.Event;
+
+public class TemperatureWarning extends Event {
 
     private int rackID;
     private double averageTemperature;
 
-    public TemperatureWarning(int rackID, double averageTemperature) {
+    public TemperatureWarning(int eventID, int rackID, double averageTemperature) {
+        super(eventID);
+        
         this.rackID = rackID;
         this.averageTemperature = averageTemperature;
     }
 
     public TemperatureWarning() {
-        this(-1, -1);
+        this(-1, -1, -1);
     }
-
+    
     public int getRackID() {
         return rackID;
     }

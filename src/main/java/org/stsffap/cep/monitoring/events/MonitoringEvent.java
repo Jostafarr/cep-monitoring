@@ -18,11 +18,16 @@
 
 package org.stsffap.cep.monitoring.events;
 
-public abstract class MonitoringEvent {
+import org.stsffap.cep.monitoring.pyramid.Event;
+
+public abstract class MonitoringEvent extends Event {
     private int rackID;
 
-    public MonitoringEvent(int rackID) {
+    public MonitoringEvent(int rackID, int eventID) {
+        
+        super(eventID);
         this.rackID = rackID;
+        
     }
 
     public int getRackID() {

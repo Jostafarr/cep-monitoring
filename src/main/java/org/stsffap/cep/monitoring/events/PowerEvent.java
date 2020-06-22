@@ -21,8 +21,9 @@ package org.stsffap.cep.monitoring.events;
 public class PowerEvent extends MonitoringEvent {
     private double voltage;
 
-    public PowerEvent(int rackID, double voltage) {
-        super(rackID);
+    public PowerEvent(int eventID, int rackID, double voltage) {
+        
+        super(rackID, eventID);
 
         this.voltage = voltage;
     }
