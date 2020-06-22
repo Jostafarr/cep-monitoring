@@ -4,7 +4,7 @@ package org.stsffap.cep.monitoring.pyramid;
 
 public abstract class Event {
 
-    public int eventID;
+    protected int eventID;
 
     public Event(int eventID) {
         this.eventID = eventID;

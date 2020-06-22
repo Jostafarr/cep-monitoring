@@ -82,13 +82,17 @@ public class CEPMonitoring {
         
         
         // Input stream of monitoring events
-        DataStream<Event> inputEventStream = ((MonitoringEventTransformation) transform0).transform(env);
+      
 
-
-        DataStream<Event> warnings =  ((TemperatureWarningTransformation) transform1).transform(inputEventStream);
-         DataStream<Event> alerts = ((TemperatureAlertTransformation) transform2).transform(warnings);
+        DataStream<Event> alerts = ((TemperatureAlertTransformation) transform2)
+                .transform(((TemperatureWarningTransformation) transform1)
+                        .transform(
+                ((MonitoringEventTransformation) transform0).transform(env)));
+        
+       
+    
         // Print the warning and alert events to stdout
-        warnings.print();
+       //() warnings.print();
         alerts.print();
 
         env.execute("CEP monitoring job");

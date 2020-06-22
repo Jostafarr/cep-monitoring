@@ -8,11 +8,17 @@ import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
 public abstract  class Level {
-    private ArrayList<Tuple3<Event, Transformation, Event>> level;
+    protected ArrayList<DataStream<Event>> level;
     
     
     public abstract void build();
 
-    
+    public ArrayList<DataStream<Event>> getLevel(){
+        return level;
+    }
+
+    public int size(){
+        return level.size();
+    }
     
 }
