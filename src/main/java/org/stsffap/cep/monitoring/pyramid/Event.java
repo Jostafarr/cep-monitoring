@@ -1,8 +1,8 @@
 package org.stsffap.cep.monitoring.pyramid;
 
-import org.stsffap.cep.monitoring.events.*;
 
-public  class Event {
+
+public abstract class Event {
 
     public int eventID;
 
