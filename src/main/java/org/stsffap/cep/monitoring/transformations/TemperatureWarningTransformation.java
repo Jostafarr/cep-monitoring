@@ -15,9 +15,10 @@ import org.stsffap.cep.monitoring.events.MonitoringEvent;
 import org.stsffap.cep.monitoring.events.TemperatureEvent;
 import org.stsffap.cep.monitoring.events.TemperatureWarning;
 import org.stsffap.cep.monitoring.pyramid.Event;
+import org.stsffap.cep.monitoring.pyramid.OperatorTransformation;
 import org.stsffap.cep.monitoring.pyramid.Transformation;
 
-public class TemperatureWarningTransformation extends Transformation{
+public class TemperatureWarningTransformation extends OperatorTransformation{
     
     @Override
     public DataStream<Event> transform(DataStream<Event> inputEventStream){

@@ -12,13 +12,15 @@ import org.apache.flink.streaming.api.windowing.time.Time;
 import org.stsffap.cep.monitoring.events.TemperatureAlert;
 import org.stsffap.cep.monitoring.events.TemperatureWarning;
 import org.stsffap.cep.monitoring.pyramid.Event;
+import org.stsffap.cep.monitoring.pyramid.OperatorTransformation;
 import org.stsffap.cep.monitoring.pyramid.Transformation;
 import org.apache.flink.util.Collector;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.functions.KeySelector;
 
-public class TemperatureAlertTransformation extends Transformation {
-
+public class TemperatureAlertTransformation extends OperatorTransformation {
+   
+    @Override
     public DataStream<Event> transform(DataStream<Event> warnings) {
         // Alert pattern: Two consecutive temperature warnings appearing within a time
         // interval of 20 seconds
@@ -48,6 +50,8 @@ public class TemperatureAlertTransformation extends Transformation {
                     }
                 }, TypeInformation.of(Event.class));
     }
+
+  
 
    
     }

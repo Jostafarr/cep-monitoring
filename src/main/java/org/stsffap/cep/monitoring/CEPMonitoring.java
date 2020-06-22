@@ -33,6 +33,7 @@ import org.apache.flink.streaming.api.functions.IngestionTimeExtractor;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.util.Collector;
 import org.stsffap.cep.monitoring.sources.MonitoringEventSource;
+import org.stsffap.cep.monitoring.transformations.MonitoringEventTransformation;
 import org.stsffap.cep.monitoring.transformations.TemperatureAlertTransformation;
 import org.stsffap.cep.monitoring.transformations.TemperatureWarningTransformation;
 import org.stsffap.cep.monitoring.events.MonitoringEvent;
@@ -74,27 +75,18 @@ public class CEPMonitoring {
         // Use ingestion time => TimeCharacteristic == EventTime + IngestionTimeExtractor
         env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
 
-        // Input stream of monitoring events
-        DataStream<Event> inputEventStream = env
-                .addSource(new MonitoringEventSource(
-                        MAX_RACK_ID,
-                        PAUSE,
-                        TEMPERATURE_RATIO,
-                        POWER_STD,
-                        POWER_MEAN,
-                        TEMP_STD,
-                        TEMP_MEAN))
-                .assignTimestampsAndWatermarks(new IngestionTimeExtractor<>());
-
-                //inputEventStream.print();
-
-                
-    
-                  
+        Transformation transform0 = new MonitoringEventTransformation();
         Transformation transform1 = new TemperatureWarningTransformation();
         Transformation transform2 = new TemperatureAlertTransformation();
-        DataStream<Event> warnings =  transform1.transform(inputEventStream);
-         DataStream<Event> alerts = transform2.transform(warnings);   
+        
+        
+        
+        // Input stream of monitoring events
+        DataStream<Event> inputEventStream = ((MonitoringEventTransformation) transform0).transform(env);
+
+
+        DataStream<Event> warnings =  ((TemperatureWarningTransformation) transform1).transform(inputEventStream);
+         DataStream<Event> alerts = ((TemperatureAlertTransformation) transform2).transform(warnings);
         // Print the warning and alert events to stdout
         warnings.print();
         alerts.print();
